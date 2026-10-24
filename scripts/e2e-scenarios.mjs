@@ -42,7 +42,7 @@ function micScenario(type) {
       await page.keyboard.press('KeyD')
       await page.waitForTimeout(600)
       await shot('recording')
-      await waitForPhase(page, 'result', 45000)
+      await waitForPhase(page, 'inspecting', 45000)
       await page.waitForTimeout(800)
       await shot('result')
       const { result, floorDb } = await readState(page)
@@ -135,10 +135,81 @@ export const scenarios = [
       const mid = await readState(page)
       if (!(mid.pressure > 0.1)) throw new Error(`按住 7 秒后压力只有 ${mid.pressure}`)
       await page.keyboard.press('Enter')
-      await waitForPhase(page, 'result', 5000)
+      await waitForPhase(page, 'inspecting', 5000)
       await shot('result')
       const { result } = await readState(page)
       return `模拟 7 秒 → 压力 ${(mid.pressure * 100).toFixed(0)}%，结果 ${result.type}（${result.endReason}）`
+    },
+  },
+
+  {
+    name: 'interact',
+    // 完整演示：模拟倾诉 → 凝结 → 种树 / 浇水 / 汽油 / 敲碎 → 收集 → 标本馆 → 重新打开
+    async run({ page, shot }) {
+      const state = () => page.evaluate(() => window.__PRESSURA__.live.artifact?.state ?? null)
+      const center = async () => {
+        const box = await page.locator('canvas').boundingBox()
+        return { x: box.x + box.width / 2, y: box.y + box.height * 0.47 }
+      }
+      await page.getByRole('button', { name: '没有麦克风？用模拟模式' }).click()
+      await waitForPhase(page, 'recording', 5000)
+      await page.getByRole('button', { name: /石/ }).click()
+      await page.waitForTimeout(1800)
+      await page.keyboard.down('Space')
+      await page.waitForTimeout(12000)
+      await page.keyboard.up('Space')
+      await page.keyboard.press('Enter')
+      await waitForPhase(page, 'inspecting', 5000)
+      await page.waitForTimeout(1500)
+      await shot('1-crystallized')
+
+      const c = await center()
+      // 种两棵树（点击位置稍微错开）
+      await page.mouse.click(c.x - 40, c.y - 60)
+      await page.waitForTimeout(400)
+      await page.mouse.click(c.x + 50, c.y - 30)
+      await page.waitForTimeout(2500)
+      // 浇水
+      await page.getByRole('button', { name: /浇水/ }).click()
+      await page.mouse.move(c.x, c.y - 40)
+      await page.mouse.down()
+      await page.waitForTimeout(1500)
+      await shot('2-watering')
+      await page.mouse.up()
+      // 汽油
+      await page.getByRole('button', { name: /汽油/ }).click()
+      await page.mouse.move(c.x + 20, c.y)
+      await page.mouse.down()
+      await page.waitForTimeout(800)
+      await page.mouse.up()
+      await page.waitForTimeout(1200)
+      await shot('3-burning')
+      const mid = await state()
+      if (mid.trees.length < 2) throw new Error(`应有 2 棵树，实际 ${mid.trees.length}`)
+      if (!(mid.wet > 0 || mid.burning > 0)) throw new Error('浇水/汽油没有生效')
+      // 双击三次 → 碎裂
+      for (let i = 0; i < 3; i++) {
+        await page.mouse.dblclick(c.x, c.y)
+        await page.waitForTimeout(350)
+      }
+      await page.waitForTimeout(600)
+      await shot('4-shattered')
+      const end = await state()
+      if (!end.shattered) throw new Error(`敲了 3 次没碎，hits=${end.hits}`)
+      // 收集 → 标本馆
+      await page.getByRole('button', { name: /收集/ }).click()
+      await waitForPhase(page, 'gallery', 5000)
+      await page.waitForTimeout(500)
+      await shot('5-gallery')
+      const cards = await page.locator('.gallery-card').count()
+      if (cards < 1) throw new Error('标本馆里没有卡片')
+      // 重新打开
+      await page.locator('.gallery-open').first().click()
+      await waitForPhase(page, 'inspecting', 5000)
+      await page.waitForTimeout(1500)
+      await shot('6-reopened')
+      const reopened = await state()
+      return `树 ${mid.trees.length} 棵，湿润 ${mid.wet.toFixed(2)}，火 ${mid.burning.toFixed(2)}，敲击 ${end.hits} 次已碎；标本馆 ${cards} 件；重新打开后 shattered=${reopened.shattered}`
     },
   },
 

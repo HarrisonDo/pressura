@@ -80,12 +80,12 @@ export function IceCluster({ seed }: { seed: number }) {
     const m = mesh.current
     if (!g || !m) return
     const w = formWeight(v, 'ice')
-    g.visible = w > 0.001
+    g.visible = w > 0.001 && !v.hidden
     if (!g.visible) return
 
     const p = v.pressure
     const pulse = 1 + v.intensity * 0.03 + v.burst * 0.06
-    g.scale.setScalar(entitySize(p) * popIn(w) * pulse)
+    g.scale.setScalar(entitySize(p) * popIn(w) * pulse * v.scaleMul)
     g.rotation.y = v.time * 0.08
 
     crystals.forEach((c, i) => {

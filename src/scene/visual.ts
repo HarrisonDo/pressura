@@ -34,6 +34,14 @@ export interface VisualState {
   /** 内部：用来识别新会话和新的突发 */
   snapshotRef: SessionSnapshot | null
   burstCount: number
+  /** 标本处置带来的整体缩放（冰再冻变大、被烧融变小） */
+  scaleMul: number
+  /** 标本已碎 */
+  hidden: boolean
+  /** 火核已熄灭成黑曜石 */
+  obsidian: boolean
+  /** 释放度 0~1，越高环境越平静 */
+  calm: number
 }
 
 export function createVisualState(reducedMotion = false): VisualState {
@@ -53,6 +61,10 @@ export function createVisualState(reducedMotion = false): VisualState {
     reducedMotion,
     snapshotRef: null,
     burstCount: 0,
+    scaleMul: 1,
+    hidden: false,
+    obsidian: false,
+    calm: 0,
   }
 }
 

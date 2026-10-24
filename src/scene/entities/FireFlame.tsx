@@ -191,11 +191,11 @@ export function FireFlame({ seed }: { seed: number }) {
     const g = group.current
     if (!g || !billboard.current) return
     const w = formWeight(v, 'fire')
-    g.visible = w > 0.001
+    g.visible = w > 0.001 && !v.hidden && !v.obsidian
     if (!g.visible) return
 
     const p = v.pressure
-    const size = entitySize(p) * popIn(w) * (1 + v.burst * 0.15)
+    const size = entitySize(p) * popIn(w) * (1 + v.burst * 0.15) * v.scaleMul
     g.scale.setScalar(size)
 
     // 第 4 阶段拔高成火柱，第 5 阶段收拢成火球

@@ -30,7 +30,7 @@ export function Atmosphere() {
   useFrame(() => {
     blendColor(background, v, (p) => p.background)
     blendColor(fog.color, v, (p) => p.fog)
-    fog.density = blendNumber(v, (p) => p.fogDensity)
+    fog.density = blendNumber(v, (p) => p.fogDensity) * (1 - v.calm * 0.55)
 
     if (hemi.current) {
       blendColor(hemi.current.color, v, (p) => p.sky)

@@ -56,7 +56,7 @@ export function StoneRock({ seed }: { seed: number }) {
     const r = rock.current
     if (!g || !r) return
     const w = formWeight(v, 'stone')
-    g.visible = w > 0.001
+    g.visible = w > 0.001 && !v.hidden
     if (!g.visible) return
 
     const p = v.pressure
@@ -67,7 +67,7 @@ export function StoneRock({ seed }: { seed: number }) {
       Math.sin(v.time * 53 + 1) * tremor,
       Math.sin(v.time * 41 + 2) * tremor,
     )
-    g.scale.setScalar(entitySize(p) * popIn(w))
+    g.scale.setScalar(entitySize(p) * popIn(w) * v.scaleMul)
     g.rotation.y = v.time * 0.06
 
     // 砂砾聚拢成石头

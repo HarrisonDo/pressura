@@ -15,6 +15,7 @@ import {
 import type { EmotionType, GrowthForm } from '../core/types'
 import { live } from './live'
 import { useAppStore, type InputMode } from './store'
+import { beginInspect, closeArtifact } from './artifactController'
 
 let source: FeatureSource | null = null
 let session: EmotionSession | null = null
@@ -29,7 +30,8 @@ const get = useAppStore.getState
 export async function startRecording(mode: InputMode): Promise<void> {
   const token = ++startToken
   teardown()
-  set({ inputMode: mode, micStatus: mode === 'mic' ? 'requesting' : 'ready', notice: null })
+  closeArtifact()
+  set({ seed: freshSeed(), inputMode: mode, micStatus: mode === 'mic' ? 'requesting' : 'ready', notice: null })
 
   const src: FeatureSource =
     mode === 'mic'
@@ -75,6 +77,7 @@ export function finishRecording(): boolean {
 export function backToStart(): void {
   startToken++
   teardown()
+  closeArtifact()
   live.snapshot = null
   set({ phase: 'onboarding', sessionPhase: null, form: 'seed', result: null, micStatus: 'idle' })
 }
@@ -103,7 +106,8 @@ function handleEvent(event: SessionEvent): void {
     case 'ended':
       // 结束后立刻释放麦克风（浏览器的录音指示灯随之熄灭）；live.snapshot 保留最后一帧给画面用
       teardown()
-      set({ phase: 'result', result: event.result, form: event.result.type })
+      set({ result: event.result, form: event.result.type })
+      beginInspect(event.result)
       break
     case 'burst':
       break
