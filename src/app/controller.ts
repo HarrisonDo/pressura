@@ -12,7 +12,7 @@ import {
   type FeatureSource,
   type SessionEvent,
 } from '../core/audio'
-import type { EmotionType } from '../core/types'
+import type { EmotionType, GrowthForm } from '../core/types'
 import { live } from './live'
 import { useAppStore, type InputMode } from './store'
 
@@ -127,13 +127,49 @@ function teardown(): void {
   session = null
 }
 
+export interface PreviewOptions {
+  form: GrowthForm
+  pressure: number
+  /** 平均发声强度，会叠加一个起伏 */
+  intensity?: number
+  /** 每隔多少秒来一次强突发，0 表示不突发 */
+  burstEvery?: number
+}
+
+/**
+ * 开发用：不经过声音引擎，直接把画面定格在某个材质 / 压力上，给端到端截图和调视觉用。
+ */
+export function startPreview(options: PreviewOptions): void {
+  startToken++
+  teardown()
+  const snap = new EmotionSession().snapshot
+  snap.phase = 'listening'
+  snap.form = options.form
+  snap.pressure = options.pressure
+  live.snapshot = snap
+  set({ phase: 'recording', inputMode: 'sim', sessionPhase: 'listening', form: options.form, result: null })
+  let t = 0
+  let nextBurst = options.burstEvery ?? 0
+  stopLoop = startFrameLoop((dt) => {
+    t += dt
+    const base = options.intensity ?? 0.5
+    snap.intensity = base * (0.65 + 0.35 * Math.sin(t * 4.3) * Math.sin(t * 1.7))
+    snap.loud = snap.intensity
+    snap.voiced = base > 0
+    if (options.burstEvery && t >= nextBurst) {
+      snap.burstCount++
+      nextBurst += options.burstEvery
+    }
+  })
+}
+
 // 开发模式下暴露给端到端测试读取
 if (import.meta.env.DEV) {
-  window.__PRESSURA__ = { live, getState: get }
+  window.__PRESSURA__ = { live, getState: get, preview: startPreview }
 }
 
 declare global {
   interface Window {
-    __PRESSURA__?: { live: typeof live; getState: typeof get }
+    __PRESSURA__?: { live: typeof live; getState: typeof get; preview: typeof startPreview }
   }
 }

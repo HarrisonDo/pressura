@@ -78,7 +78,7 @@ async function runScenario(scenario, url) {
     logs.push(line)
     if (msg.type() === 'error') errors.push(line)
   })
-  page.on('pageerror', (err) => errors.push(`[pageerror] ${err.message}`))
+  page.on('pageerror', (err) => errors.push(`[pageerror] ${err.stack ?? err.message}`))
 
   const started = Date.now()
   let ok = true

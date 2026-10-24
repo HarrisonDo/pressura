@@ -59,6 +59,51 @@ function micScenario(type) {
 
 export const scenarios = [
   {
+    name: 'visual',
+    // 逐个材质、逐个阶段截图，用来人工检查画面
+    async run({ page, shot }) {
+      await page.waitForTimeout(2500)
+      await shot('0-idle')
+      const frames = [
+        ['seed', 0.08],
+        ['ice', 0.25],
+        ['ice', 0.55],
+        ['ice', 0.8],
+        ['ice', 0.97],
+        ['stone', 0.25],
+        ['stone', 0.55],
+        ['stone', 0.8],
+        ['stone', 0.97],
+        ['fire', 0.25],
+        ['fire', 0.55],
+        ['fire', 0.8],
+        ['fire', 0.97],
+      ]
+      const fps = []
+      for (const [form, pressure] of frames) {
+        await page.evaluate(
+          ([f, p]) => window.__PRESSURA__.preview({ form: f, pressure: p, intensity: 0.55, burstEvery: 1.5 }),
+          [form, pressure],
+        )
+        await page.waitForTimeout(3200)
+        fps.push(
+          await page.evaluate(
+            () =>
+              new Promise((resolve) => {
+                let n = 0
+                const start = performance.now()
+                const tick = () => (++n < 30 ? requestAnimationFrame(tick) : resolve((n / (performance.now() - start)) * 1000))
+                requestAnimationFrame(tick)
+              }),
+          ),
+        )
+        await shot(`${form}-${Math.round(pressure * 100)}`)
+      }
+      return `无头软件渲染帧率 ${Math.min(...fps).toFixed(0)}~${Math.max(...fps).toFixed(0)} fps（仅供参考，真机 GPU 会快得多）`
+    },
+  },
+
+  {
     name: 'onboarding',
     async run({ page, shot }) {
       await page.waitForTimeout(1200)
