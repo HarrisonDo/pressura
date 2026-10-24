@@ -53,13 +53,15 @@ async function runScenario(scenario, url) {
   const args = [
     '--enable-unsafe-swiftshader',
     '--autoplay-policy=no-user-gesture-required',
-    '--use-fake-ui-for-media-stream',
     '--use-fake-device-for-media-stream',
   ]
+  // 自动同意麦克风授权；测试"拒绝授权"时不加
+  if (!scenario.denyMic) args.push('--use-fake-ui-for-media-stream')
   if (scenario.audio) {
     const wav = path.join(root, 'scripts', 'audio', scenario.audio)
-    if (!existsSync(wav)) throw new Error(`缺少音频文件 ${wav}，先运行 node scripts/gen-audio.mjs`)
-    args.push(`--use-file-for-fake-audio-capture=${wav}`)
+    if (!existsSync(wav)) await import('./gen-audio.mjs')
+    // %noloop：音频播完后不循环，之后就是纯静音
+    args.push(`--use-file-for-fake-audio-capture=${wav}%noloop`)
   }
 
   const browser = await chromium.launch({ channel: 'chrome', headless: true, args })

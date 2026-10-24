@@ -17,3 +17,10 @@ export const EMOTION_LABELS: Record<GrowthForm, string> = {
   stone: '焦虑 · 石',
   fire: '愤怒 · 火',
 }
+
+export const EMOTION_NAMES: Record<GrowthForm, string> = {
+  seed: '种子',
+  ice: '冰',
+  stone: '石',
+  fire: '火',
+}
