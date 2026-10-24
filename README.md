@@ -1,16 +1,48 @@
-# React + Vite
+# Pressura · 情绪标本
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+对着麦克风说话、叹气或呐喊，场景中央会从一粒种子长成冰、石或火。声音停下后，它凝结成一件可以 3D 把玩的"情绪标本"：可以在上面种树、浇水、浇汽油、双击敲碎，或者收进画廊。
 
-Currently, two official plugins are available:
+> 这是"声音特征 → 视觉"的表达映射，不是情绪识别。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 隐私
 
-## React Compiler
+- 音频只在浏览器本地分析，不上传、不保存原始录音
+- 画廊数据只存在本机 IndexedDB
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 开发
 
-## Expanding the Oxlint configuration
+需要 Node 22+（Vitest 5 官方支持 22 / 24 / 26）和本机安装的 Google Chrome（端到端检查用）。
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm install
+npm run dev        # 本地开发 http://localhost:5173
+npm run check      # 类型检查 + lint + 单测 + 构建
+npm run e2e        # 无头 Chrome 跑端到端场景，截图输出到 .e2e/
+```
+
+麦克风需要安全上下文：本地 `localhost` 可以直接用，部署后必须是 HTTPS。
+
+## 目录结构
+
+```
+src/
+  core/          不依赖 React / three.js 的纯 TS：音频分析、压力模型、情绪签名、处置规则
+  scene/         React Three Fiber 场景组件
+  ui/            HUD、工具栏等 DOM 界面
+  app/           桌面应用外壳：状态机、页面组合
+scripts/         端到端检查、测试音频生成
+```
+
+`core/` 刻意保持框架无关，将来做 agent 宠物插件时可以直接复用，只需要换一个外壳。
+
+## 路线图
+
+| 里程碑 | 内容 | 状态 |
+|---|---|---|
+| M0 | 骨架：TS、R3F、锁定依赖、lint、单测、端到端检查 | ✅ |
+| M1 | 声音引擎：校准、特征、压力模型、类型判定、调试面板、模拟输入 | |
+| M2 | 生长场景：冰/石/火 × 5 阶段，按类型适配的环境 | |
+| M3 | 凝结与情绪签名，确定性生成标本 | |
+| M4 | 处置交互：种树 / 浇水 / 汽油 / 敲击碎裂，环境随处置变化 | |
+| M5 | 画廊：IndexedDB、缩略图、3D 查看、筛选、统计、导入导出 | |
+| M6 | 打磨：音效、无障碍、性能、部署 | |
